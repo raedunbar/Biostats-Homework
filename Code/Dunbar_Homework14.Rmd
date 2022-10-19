@@ -1,0 +1,96 @@
+---
+title: "RUsing dplyr to fix mistakes"
+output: html_notebook
+---
+
+## Setting up R
+```{r}
+rm(list=ls())
+```
+
+```{r}
+library(here)
+library(dplyr)
+library(ggplot2)
+```
+
+## Importing the data
+
+```{r}
+DF<- read.csv(here("Data for the code", "drug_resistance (1).csv"))
+```
+
+### Using stringsAsFactors=TRUE
+```{r}
+DF2<- read.csv(here("Data for the code", "drug_resistance (1).csv"), stringsAsFactors= TRUE)
+
+```
+Now treatment and tech.name are listed as factor data rather than character data. 
+
+#### How stringsAsFactors=TRUE changes the data
+```{r}
+summary(DF)
+```
+summary returns just the data type for the Treatment and tech.name column, because they are just character data. 
+
+
+```{r}
+summary(DF2)
+```
+
+When you add stringsAsFactors it now lists all the different "factors" of the treatment and tech.name columns. So, you get to see all the types of entries. 
+
+```{r}
+levels(DF2$Treatment) 
+unique(DF2$Treatment)
+#both of these function very similarily. What is the difference? 
+
+levels(DF$Treatment) 
+unique(DF$Treatment)
+#levels does not work, because the data is character data so there are no 'levels' of data. But unique still works, since it just shows each entry that is thinks is a uniquw entry. So, I just answered my question as to how levels and unique differs. 
+```
+
+Here can see here, that R thinks control, Control, and cantrol are all diffferent treratments, same with drug x 2 and drugx2 even though a person can tell they are the same treatment. So, that would have to be fixed. 
+
+```{r}
+unique(DF2$Plate_n) #must use unique since not factor data
+levels(DF2$tech.name)
+unique(DF2$colony.count)
+```
+plate_n and colony.count are good data wise, the tech names however are not, as R thinks brain, brian, and Brian are different and so is becca and Becca. 
+
+Also a note: the headers have a . and not a _. becuase someone put a space in their headers, sad. 
+
+## Fixing the data
+the header names, plate_n and colony.count need to be fixed.
+
+Fixing the header names
+```{r}
+names(DF2)<-c("treatment","plate_num", "colony_count","tech_name")
+```
+
+Fixing treatment
+
+```{r}
+control<- which(DF2$treatment=="Control" | DF2$treatment=="cantrol")
+DF2$treatment[control]<- "control"
+
+drugx2<- which( DF2$treatment== "Drugx2" |  DF2$treatment=="drug2")
+DF2$treatment[drugx2]<- "drug x 2"
+
+drugx2<- which(DF2$treatment== "drug x3" | DF2$treatment== "Drug3" |  DF2$treatment=="Drug x 3"| DF2$treatment=="drug3" )
+DF2$treatment[drugx2]<- "Drug x 3"
+
+```
+
+fixing the names
+
+```{r}
+control<- which(DF2$tech_name=="becca")
+DF2$tech_name[control]<- "Becca"
+
+drugx2<- which(DF2$tech_name== "brian" | DF2$treatment== "brain")
+DF2$tech_name[drugx2]<- "Brian"
+```
+
+

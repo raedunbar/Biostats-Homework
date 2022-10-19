@@ -1,0 +1,69 @@
+---
+title: "Dunbar_Homework10"
+author: "Rae Dunbar"
+date: "9/22/2022"
+output:
+---
+This is homework number 10 for biostats 
+
+### Setting up R
+```{r}
+rm(list=ls()) #clear R's brain
+# adding the desired packages
+library(dplyr)
+library(ggplot2)
+library(here)
+```
+
+### Getting my Data into R
+```{r}
+squirrel<- read.csv(here("Data for the code", "Dunbar_Problemset1_TidyData.csv"))
+
+```
+
+### So now to try the StringsAsFactors=TRUE
+```{r}
+squirrelF<- read.csv(here("Data for the code", "Dunbar_Problemset1_TidyData.csv"), stringsAsFactors=TRUE)
+# the last component changed them to factor data which is categorical
+```
+Now they are all factor variables
+
+### examining my data
+
+```{r}
+str(squirrel) #shows me the structure of my data
+```
+We can see here they are character data. 
+
+Lets look at the factor squirrel data. 
+
+```{r}
+str(squirrelF)
+```
+ Now all of all the columns that use to be characters are now factors. 
+ 
+ 
+Data looks pretty good, but I do not like viewing it like this, so I am going to do it this way instead:
+```{r}
+head(squirrelF) #shows just the first six rows, 
+```
+Now I can see it in a nice table form, but only the first 6 rows, its looks pretttttyyy.
+
+
+What are my column names and is R going to have an aneurism with them or not?
+
+```{r}
+names(squirrelF) #shows you the names of your columns.
+```
+Uh, oh I see more header names than I am supposed to have. R for some reason created the column name X and X.1 which are both blank... I have no idea why R did that. You can easily exclude them though when working with this data, so at least there is that. There are no spaces in my header names so that is good!
+
+I am trying to only include the the columns I want, so without X and X.1. 
+```{r}
+squirrel2<- (filter(squirrelF, "date",  "location"     ,     "start_time"   ,     "start_meridiem"   ,
+ "end_time"     ,     "end_meridiem"  ,    "weather"      ,     "temperature_F" ,   
+ "trappers" ,         "trap_zone"  ,       "species_SCCA_TAHU", "total_wt_g",       
+ "bag_wt_g"  ,        "sq_wt_g"   ,        "sex"     ,          "age"  ,            
+"pit_tag_num"     ,  "ear_tag_num"  ,     "fur_dye"  ,         "freeze_brand" ,    
+"comments"   ,    ))
+```
+So, that did not work as I hoped, but viewing the data went well.

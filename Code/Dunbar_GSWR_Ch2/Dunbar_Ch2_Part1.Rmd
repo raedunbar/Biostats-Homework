@@ -1,0 +1,81 @@
+---
+title: "DunbarRae_Ch2_Part1.Rmd"
+output: html_notebook
+---
+### Initial Setup for R
+
+getting pckages in that are needed.
+```{r}
+install.packages("dplyr")
+library(dplyr)
+library(ggplot2)
+```
+
+
+```{r}
+rm(list=ls()) #Clear R's Brain
+```
+
+To get data into R there are a few methods:
+
+### Method 1
+```{r}
+#This is method 1
+library(readr)
+compensation_2_ <- read_csv("Data for the code/compensation (2).csv")
+View(compensation_2_)
+```
+
+We know this method is not great, as when you clear R's brain the file directory
+is lost. So, we want to actually write out the entire correct direcotry. Or
+the R book mentions a different way. 
+
+### Method 2:
+this is much more accurate and simpler. 
+```{r}
+#use file.choose() in your consol to get the file directory
+compensation<-read.csv("/home/rldunb19/Biostats Senior Fall/Rae-Homework/Data for the code/compensation (2).csv") #fllows the file directory and reads it into R, saves
+#it under the compensation lable. 
+```
+
+### Method 3:
+Now I went to the "session" column up above by plots and Build and then clicked
+"Set working directory" then "choose directory" and chose my Data file. Now this should work:
+
+```{r}
+compensationM1<-read.csv("compensation (2).csv")
+```
+This method did not work, which is a mega bummer :(. Do you know why Erika??
+
+### Method 4
+you can also put your data in the same place where you put your script/Rmd file. 
+Why don't we do this?
+
+### Checking your Data
+
+```{r}
+#to get the names of the columns:
+names(compensation)
+
+# should return the first 6 rows
+head(compensation)
+
+# should return the last 6 rows
+tail(compensation)
+
+# number of rows and columns
+dim(compensation)
+
+#returns the structure of the data
+str(compensation)
+```
+
+### Using dyplr
+Two functions from dplyr are also use- ful for looking at the data you’ve just imported.
+```{r}
+# look at your data in a horizontal view
+glimpse(compensation)
+
+# provides a vertical view
+tbl_df(compensation)
+```

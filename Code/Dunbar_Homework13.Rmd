@@ -1,0 +1,68 @@
+---
+title: "Applying more dplyr to my data"
+author: "Rae Dunbar"
+date: "9/28/2022"
+output: html_document
+---
+## Setting up R
+```{r}
+rm(list=ls())
+```
+
+```{r}
+library(here)
+library(ggplot2)
+library(dplyr)
+```
+
+## Importing the data
+
+```{r}
+DF<- read.csv(here("Data for the code", "day_one_data_for_homework13.csv"), stringsAsFactors=TRUE)
+```
+
+## checking the data out
+
+```{r}
+View(DF)
+```
+I noticed the data has / in it, which R is going to interpret as a character and thus make it factor data, which may mess up any calculations I want to do.
+
+also, dots were put in for the column headers that had a space. And they replaced # with two dots.  to fix this lets change the column names. 
+
+## Changing the Column Headers
+```{r}
+names(DF)<-c("Name", "Date", "Part", "Tree_num", "Species", "leaf_length", "leaf_width", "leaf_units")
+```
+
+
+## Using dplyr
+
+9. Notice that some of the leaf measurements are in inches, and some are in metric units. Write code that selects just the rows of data that are in English units (inches) and that saves them to a new data frame called "English"
+
+The scientist named Rae Dunbar, thats me, measured them in inches rather than centimeters, being a proper silly American. Or, perhaps, making the class more interesting on purpose ;).  Knowing this, we can make a new data frame called English. 
+```{r}
+English<- DF %>% filter(Name=="Rae Dunbar") %>% slice(c(-6))
+# I used slice to get rid of the last row, since it had no data in it. We each only collected 5 trees, so not sure why 6 rows got put in. But slice(c(-6)) tells R to remove the 6th row, hence -6. 
+```
+
+Another method:
+Given there is a units column, we can filter for just the "inches" unit. 
+
+```{r}
+English2<- DF %>% filter(leaf_units=="inches", na.rm=TRUE)
+```
+
+That second method is much better, thank you, Edward, for pointing out to me that there was a units column. And that is why you should check over the data entirely before beginning your data manipulation process. 
+
+10.Now notice that the dates have been entered in several formats, and that for one person, the years associated with the dates are incorrect. Write code that collects all of the data for which the dates have been formatted in the same way together into a single data frame and call it "Uniform_dates"
+
+Looking at the data most people put the date as either 8/24/2022 or 8/24/22. We can use R to see which date gives us more datum entries.  
+```{r}
+Uniform_dates <- DF %>% filter(Date=="8/24/22")
+```
+
+8/24/22 was done by 5 people, whereas 8/24/2022 was only put in by 3 people, so I used the former. 
+
+
+

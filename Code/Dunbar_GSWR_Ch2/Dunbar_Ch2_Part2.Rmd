@@ -1,0 +1,109 @@
+---
+title: "Dunbar_Ch2_Part2"
+output: html_notebook
+---
+
+### Initial Setup for R
+
+getting packages in that are needed.
+```{r}
+library(dplyr)
+library(ggplot2)
+```
+
+
+```{r}
+rm(list=ls()) #Clear R's Brain
+```
+
+Importing the data
+```{r}
+nasty<-read.csv("/home/rldunb19/Biostats Senior Fall/Rae-Homework/Data for the code/nasty format.csv") 
+```
+
+### Viewing the Data
+```{r}
+str(nasty)
+```
+
+First things first. The data frame in R has 37 observations and 11 variables. The experiment involved only 36 experimental units, however. Looking at the data in R, by clicking on the nasty.format text in the Rstudio Environment pane, and scrolling down in the displayed data, shows there is a 37th row containing no data. You can see that below with tbl_df.
+```{r}
+tbl_df(nasty)
+```
+
+### Deleting an extra Row
+Lets clean that up:
+
+```{r}
+nasty <- filter(nasty, Bottle != "") #filter out the data to keep all the rows 
+#in which the bottle column is not equal to "" as in all the entries that are not
+#nothing, keep those.
+glimpse(nasty) #look at the data
+```
+
+we can see that it worked. 
+
+### Using gather()
+
+Now we make the data tidy. We need a new variable that contains the date on which observations were made, and a new variable containing the ob- servations of bacterial abundance that are currently stored in columns 4 to 11. And then we need to move the data into these new columns. This is all very straightforward, thanks to the gather() function in the tidyr package. 
+
+```{r}
+library(tidyr)
+tidy_data <- gather(nasty, Date, Abundance, 4:11)
+#The second is the name of the new variable that will contain the dates (we call it Date). The third is the name of the new variable that will contain the bacterial abundances (we call it Abundance). The fourth argument is the location in the nasty.format data frame of the observations of bacterial abundance that are to be put into the new Abundance variable.
+str(tidy_data)
+```
+
+I do not understand the 4:11 portion of the code still. 
+
+### Cleaning the Dates
+The data are now officially tidy. The Date variable still needs a bit of work, however. We need to remove the X at the beginning, and make R recognize
+GETTING YOUR DATA INTO R 53
+that these are dates (i.e. change the variable type from Factor to a date- type variable.). First we remove the X, using the sub_str() function in the stringr add-on package:
+
+```{r}
+library(stringr)
+tidy_data <- mutate(tidy_data, Date = substr(Date, 2, 20))
+#We tell the sub_str() function the variable to work on, and the character in that variable at which to start keeping characters (i.e. keep from the second character on). The third variable we have made 20, which is past the end of the date, so we don’t discard any later characters. We do all this within the mutate() function of the dplyr add-on package, which provides a neat way of changing (or adding) variables in a data frame (much more about this in the next chapter).
+```
+
+### Changing the Dates into R Worthy Ones
+Now we need to change the variable into one that R recognizes as con- taining dates. Technically, we are going to parse the information in the date variable so that R regards it as a date. This will allow us to use the Date variable as a continuous variable, for example to make a graph with the date on the x-axis, or even to calculate the number of days, months, or years between two or more dates.
+We will use a function in the lubridate package. This package contains the functions ymd(), ydm(), dym(), dmy(), myd(), and mdy(), among oth- ers. Which of these functions should we use for our data? Take a look at the date values:
+
+```{r}
+unique(tidy_data$Date)
+```
+Not too much sleuthing shows that our date has the format day.month.year. So we use the function dmy(). This is a quite intelligent function, able to deal with different separators (ours is a dot but others
+work), and dates that include leading zeros (ours does):
+
+```{r}
+ library(lubridate)
+tidy_data <- mutate(tidy_data, Date = dmy(Date))
+glimpse(tidy_data)
+```
+First time I did this it did not work and said it had issues parcing. I ran it again and tada, so that was weird. 
+
+### Using our clean data
+ Imagine we want to view the dynamics of bacterial abundance in each bottle. We can now do this with very little code:
+
+```{r}
+ggplot(data = tidy_data, aes(x=Date, y=Abundance)) +
+geom_point() + facet_wrap(~Bottle)
+#We tell ggplot() the data frame to look in for variables, the x- and y-variables, to plot points, and then ask for on graph (i.e. facet) for each of the bottles
+```
+
+Here are some others to keep in mind: 
+
+ spread(): does the opposite of gather. Useful for preparing data for multivariate methods.
+• separate(): separates information present in one column into mul- tiple new columns.
+• unite(): puts information from several columns into one column.
+• rename(): renames the columns of your data.
+• rbind(): puts two datasets with exactly the same columns together
+(i.e. it binds rows together).
+• cbind(): puts two datasets with exactly the same rows together (i.e. it
+binds columns together). (often better to use the next function . . . )
+• join(): a suite of functions, such as full_join(), which allows joining together two datasets with one or more columns in common. (Same
+as the merge() function in the base package.)
+
+

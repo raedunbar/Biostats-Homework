@@ -1,0 +1,193 @@
+---
+title: "dplyr, piping, muatate, filter, stats, etc."
+author: "Rae Dunbar"
+date: "9/25/2022"
+output: html_document
+---
+In chapter three were working on Data Management, Manipulation, and Exploration with dplyr. 
+
+## Setting Up R
+
+```{r}
+rm(list=ls()) #clearing R's Brain
+```
+
+```{r}
+#Adding the desired packages
+
+library(dplyr) #a very profound force tells me we will need this package. 
+library(here)
+library(ggplot2)
+```
+
+## Importing the data
+
+```{r}
+DF <- read.csv(here("Data for the code", "compensation (3).csv")) #getting the compensation data into R
+```
+
+
+## Using the summary() Function
+
+We covered a few handy tools in the previous chapter for looking at pieces of your data. While names(), head(), dim(), str(), tbl_df(), and glimpse() are good for telling you what your data look like (i.e. correct number of
+DATA MANAGEMENT, MANIPULATION, AND EXPLORATION 59
+rows and columns), they don’t give much information about the particular values in each variable, or summary statistics of these. To get this informa- tion, use the summary() function on your data frame.
+```{r}
+glimpse(DF) #looking at the data
+```
+
+data looks good
+
+try the summary() function
+```{r}
+summary(DF) #gives us the median, mean, interquartile range, minimum, and maximum for all numeric columns (variables), and the ‘levels’ and sample size for each level of all categorical columns (vari- ables).
+```
+the max for the fruit data is 116 whereas the min is only 14.73, that is a big difference. Something may be wrong with the data. 
+
+## dplyr Verbs
+The key to using dplyr is to remember that the first argument to ALL dplyr functions is the data frame. 
+
+ All dplyr functions do one thing, and one thing very fast and very effectively.
+
+### Select()
+select() grabs columns. Of course, it helps to know the name of the col- umns, so if you need to, use names(compensation) first. Here is how we can use it to get the Fruit column.
+
+```{r}
+select(DF, Fruit) #use the fruit column from the data frame DF
+```
+
+Now all we can see is the fruit column.
+
+select() can also be used to select all columns except one. For example, if we wanted to leave out the Root column, leaving only the Fruit and Grazing columns:
+
+```{r}
+select(DF, -Root) #show us all the columns but the root one. 
+```
+ 
+ This is what I can do to get rid of the X and X.1 column in my problem set 1 squirrel data. 
+ 
+ ### Slice()
+ 
+ slice() grabs rows. It works by returning specific row numbers you ask for. You can ask for one row, a sequence, or a discontinuous set. For example, to get the second row, we use
+ 
+```{r}
+slice(DF, 2)
+```
+ it shows us the second row, skipping the first row of data.
+ 
+ If we want the second to the tenth, we can invoke the : to generate the sequence:
+ 
+```{r}
+slice(DF, 2:10) #now we get the 2nd to the 10th. 
+```
+ 
+I still see the header names, so I guess they are always included? 
+
+And discontinuous sets are easy, but we need to collect the row numbers using another helper function in R called c():
+
+```{r}
+slice(DF, c(2,3,10))
+```
+So, now we hae the 2nd, 3rd and 10th row but:
+
+One thing you may notice about slice() is that it also returns a data frame, but it does not return the row number identity found in the original data. You have new, continuous row numbers. Just be aware.
+
+### filter()
+
+```{r}
+with(DF, Fruit>80) #with() is a handy function . . . it says to R, ‘LOOK in this data frame, and do what comes next, and then stop looking. So return when fruit is greater than 80.
+```
+This set of TRUE and FALSE values is the information passed to filter() . . . and this is what filter() can act on and return to you.
+
+
+Let’s imagine we are interested in all of the trees producing a large amount of fruit. We see from the summary() output above that big fruit produc- tion means > 80 kg. As with all dplyr functions, we first supply the data frame, and then the condition by which we judge whether to return rows
+
+
+```{r}
+filter(DF, Fruit >80)
+```
+Now we only see the rows in which the fruits are greater than 80kg. 
+
+We can easily select rows according to multiple conditions. For example, to keep only rows with Fruit > 80 OR less than 20, we employ the boolean or symbol |:
+
+```{r}
+filter(DF, Fruit>80 | Fruit<20)
+```
+
+## Tranforming
+tranforming columns of your data
+
+### Mutate()
+
+```{r}
+DF2<- mutate(DF, logFruit=log(Fruit)) #creates a new column called logFruit and fills it with the log of the Fruit data.
+```
+
+```{r}
+head(DF2)
+```
+we can see our new column is a smashing success.
+
+## Sorting
+
+sorting your data.
+
+### Arrange()
+Sometimes it’s important or desirable to put the observations (rows) of our data in a particular order, i.e. to sort them. It may simply be that you’d like to look at the dataset, and prefer a particular ordering of rows. For ex- ample, we might want to see the compensation data in order of increasing Fruit production. We can use the arrange() function:
+```{r}
+arrange(DF, Fruit) #arranges the data based on incresing fruit production.
+```
+
+## Tips
+
+Top Tip 1: you can use more than one dplyr function in one line of code! Imagine you want fruit production > 80, and the rootstock widths ONLY. That’s a filter() and a select() agenda, if we’ve ever heard one:
+
+```{r}
+select(filter(DF, Fruit>80), Root)
+```
+
+Top Tip 2.
+Built into dplyr is a very special kind of magic, provided by Stefan Milton Bache and Hadley Wickham in the magrittr package. This gets installed when you install dplyr, so you don’t need to get it yourself. The magic is found in a symbol called a pipe. In R, the pipe command is %>%. You can read this like ‘put the answer of the left-hand command into the function on the right’.
+
+The art of piping with dplyr is to remember to always start with the data frame.
+
+```{r}
+DF %>% filter(Fruit>80) %>% select(Root) 
+#this does the same thing as above but with piping, so you start with the DF data frame and then filter just the Fruit>80 and then just select the root column. 
+```
+
+## Calculating Statistics
+
+Summarization is accomplished in a series of steps. The core idea, using
+dplyr, is to:
+1. Declare the data frameand what the grouping variableis.
+2. Provide some kind of maths function with which to summarize the
+data (e.g. mean() or sd()).
+3. Provie a nice name for the values returned.
+4. Make use all of this information. 
+
+### Method 1: no piping
+
+```{r}
+summarise(group_by(DF, Grazing), meanFruit=mean(Fruit))
+#The second line of code has some good stuff on the ‘inside’. The group_by() function works with the data frame and declares Grazing as our grouping variable. Of course, if we have more than one grouping variable, we can add them with commas in between. It’s that easy.
+
+#The third line is where we ask for the mean to be calculated for the Fruit column. We can do this, and R knows where to look, because the group_by() function has set it all up. The ‘word’ meanFruit is some formatting for the output, as you can see in the output.
+```
+
+
+
+You could also assign this to a new dataframe.
+
+## Method 2, Piping
+
+```{r}
+DF %>% group_by(Grazing) %>% summarise(meanFruit=mean(Fruit)) 
+# take the DF data frame and then group by Grazing and then summarize the data based on the mean of the Fruit column.
+```
+group_by() and summarise() are wonderful functions. You can group_by() whichever categorical variables you have, and calculate what- ever summary statistics you like, including mean(), sd(), median(), and even functions that you make yourself.
+
+```{r}
+DF %>% group_by(Grazing) %>% summarise(meanFruit=mean(Fruit), sdFruit=sd(Fruit))
+```
+

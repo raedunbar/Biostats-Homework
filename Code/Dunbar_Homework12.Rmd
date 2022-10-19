@@ -1,0 +1,74 @@
+---
+title: "Practice with dplyr"
+author: "Rae Dunbar"
+date: "9/26/2022"
+output: html_document
+---
+Practice for Chapters 2 and 3 of the R programming book. 
+## Setting up R
+```{r}
+rm(list=ls()) #clear R's brain
+```
+
+add the packages
+```{r}
+library(dplyr)
+library(here)
+library(ggplot2)
+```
+
+Getting in the data
+
+```{r}
+Cover<- read.csv(here("Data for the code", "donnerville_percent_cover.csv"), stringsAsFactors = TRUE)
+#stringsAsFactors=TRUE is important for statistical analysis.
+```
+
+## Examing the Data
+
+Lets see what this data is.
+
+```{r}
+names(Cover) #return the column names
+```
+I would consider renaming the column header Plot.dim to something that is more intuitive, as dim could be diameter or dimension. I am guessing it is diameter given the plot.type is a circle, however so changing is not necessary. The other column headers look good.
+
+renaming column headings, to fix the . in there which means there was a space in the csv.
+```{r}
+Cover<- Cover %>% rename(Plot_type= Plot.type, Plot_diameter=Plot_dim) 
+```
+
+another way
+```{r}
+names(Cover)<- c("site","Date", "Plot_type", "Plot_diameter", "Slope", "Aspect", "Plot", "type", "Percent")
+```
+
+
+```{r}
+head(Cover) #return the first 6 rows of the data
+```
+Now that I have a good idea as to what this data is, lets check our data to ensure there are no errors.
+
+```{r}
+summary(Cover)
+```
+
+The mean, median, 1st and 3rd quartile numbers all look reasonable, there appears to be no concerning outliers that suggest improper data recording. I also notice there are several NAs for Aspect, but not for any other column. 
+
+## Manipulating the Data
+
+9. Determine the average percent cover by cover type (bare, bryophytes, vascular plants) for Donnerville 1. 
+I initially forgot that we only wanted Donnerville 1, oops.
+```{r}
+Cover %>% filter(Site=="Donnerville 1") %>% group_by(Type) %>% summarise(avgPercCover= mean(Percent)) 
+# take the data frame 'Cover' and then filter so you only have the site Donnerville 1, and then group by the column Type and then make a new column called avgPerceCover which will have the mean of the percent cover per type. 
+```
+10.Determine the average percent vascular plant cover across all sites.
+
+So, site does not matter, we want the average percent cover of vascular plants in all the samples.  
+```{r}
+Cover %>% filter(Type=="Vascular") %>% summarise(avgPercCover=mean(Percent))
+# take the data frame 'Cover' and then filter out to only include the vacular type and then make a new column called avgPerceCover which will have the mean of the percent cover of vascular plants.
+```
+Yay :)
+give Gus a treat for me.
