@@ -1,0 +1,123 @@
+---
+title: "Chapter 4 Making Graphs"
+author: "Rae Dunbar"
+date: "10/20/2022"
+output: html_document
+---
+## Setting up R
+
+```{r}
+rm(list=ls())
+library(ggplot2)
+library(dplyr)
+library(here)
+```
+
+## Pulling in the Data
+
+were using the compensation data again in this excersize.
+```{r}
+compensation<- read.csv(here("Data for the code", "compensation (2).csv"))
+glimpse(compensation)
+```
+
+This is data we are familiar with, containig grazing type and fruit and root size. 
+
+## Using ggplot2
+
+To make a basic graph you do something similar to the following:
+```{r}
+ggplot(compensation, aes(x=Root, y=Fruit)) +geom_point()
+#ggplot is the function and we give it the data frame compensation. 
+#aes is a function, and it defines the graphs 'aesthetics' hence aes. So we tell it what to do with the x and y axis. 
+#ggplot works by adding layers and compets to the aesthetic map. So the data and aesthetics are the first layer. Then the points, lines and other things are the second layer. That is why we need the + symbol. The + symbol is how we add another layer, in this case points. 
+```
+We can see here that Fruit and root have a positive linear relationship. with a medium strength in correlation. 
+
+Aesthetically speaking there are many things wrong with this graph, so now we will go into how to fix them. 
+
+## Getting rid of the grey background. 
+
+```{r}
+ggplot(compensation, aes(x=Root, y=Fruit)) + geom_point() + theme_bw() #Theme_ lets you choose the color theme of the graph, so we chose bw which is black and white.
+```
+Much better. 
+
+## Increase the size of the points 
+
+```{r}
+ggplot(compensation, aes(x = Root, y = Fruit)) + geom_point(size=5) +
+theme_bw()
+```
+## Modify the names of the x and y axis
+
+```{r}
+ggplot(compensation, aes(x = Root, y = Fruit)) + geom_point(size = 5) +
+xlab("Root Biomass") +
+ylab("Fruit Production") +
+theme_bw()
+#xlab and ylab let yoou decide the actual names of the Axis 
+```
+
+
+## Adjusting colors of points to match levels 
+
+```{r}
+ggplot(compensation, aes(x=Root, y=Fruit, colour=Grazing))+ geom_point(size = 5) +
+xlab("Root Biomass") +
+ylab("Fruit Production") +
+theme_bw()
+```
+## Changing the shape of the points 
+
+```{r}
+ggplot(compensation, aes(x = Root, y = Fruit, shape = Grazing)) + geom_point(size = 5) +
+xlab("Root Biomass") +
+ylab("Fruit Production") +
+theme_bw()
+```
+Nice! Can you choose your shape?
+
+## Box and Whisker Plots
+
+```{r}
+ggplot(compensation, aes(x = Grazing, y = Fruit)) + geom_boxplot() +
+xlab("Grazing treatment") +
+ylab("Fruit Production") +
+theme_bw()
+```
+
+Tada
+
+```{r}
+ggplot(compensation, aes(x = Grazing, y = Fruit)) + geom_boxplot() +
+geom_point(size = 4, colour = 'lightgrey', alpha = 0.5) + xlab("Grazing treatment") +
+ylab("Fruit Production") + theme_bw()
+#size colour and alpha=transparency of your points) 
+```
+Frankly the light grey is too light in my opinion. Seeing the distribution does allow you to notice outliers better however, for instance the Grazed one close to 0 is quite the outlier. 
+
+## Histograms
+
+I think histograms are soooo ugly. Just always. 
+
+```{r}
+ggplot(compensation, aes(x = Fruit)) + geom_histogram(bins=10, binwidth=15)
+# we can change either the binwidth (how wide each bar is in ‘fruit units’) or the number of bins (e.g. ggplot() defaulted to 30 here). So they do the same thing.
+```
+Facets:
+
+```{r}
+ggplot(compensation, aes(x=Fruit))+ geom_histogram(binwidth=15) + facet_wrap(~Grazing)
+#facet_wrap divides the data into two based on the component specified
+```
+why is facet_wrap called that?
+
+This is a better histgram, but I still think using a bar graph would have been cleaner. Sigh...histograms. 
+
+```{r}
+ggsave("histogram_of_Fruit.png")
+```
+Wow so that saved in the Code folder!!! 
+
+
