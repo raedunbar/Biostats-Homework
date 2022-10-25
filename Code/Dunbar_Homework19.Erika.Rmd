@@ -113,4 +113,4 @@ ggplot(sugar, aes(x=Petiole_length)) + geom_histogram()
 ```
 It is not the prettiest on the block. Soon I reckon we will learn how to spruce it up a bit and get it ready for prom.
 
-HOORAY FOR HISTOGRAM PROM!
+HOORAY FOR HISTOGRAM PROM! I  ENJOY YOUR COMMENTS!
