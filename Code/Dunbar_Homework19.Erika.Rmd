@@ -1,0 +1,116 @@
+---
+title: "Practicing Chp. 1-3"
+author: "Rae Dunbar"
+date: "10/13/2022"
+output: html_document
+---
+## Setting up R
+```{r}
+rm(list=ls())
+library(dbplyr)
+library(here)
+library(ggplot2)
+```
+
+
+```{r}
+leaves<- read.csv(here("Data for the code", "Class_leaf_measurements.csv"), stringsAsFactors = TRUE)
+
+```
+
+```{r}
+str(leaves)
+```
+this tells me I forgot to do stringsasFactors as they are listed as characters, so I went back up and did that. I also see some dots in the column headings, which need to be fixed. 
+
+## Fixing the column names
+
+lets see what we are dealing with.
+```{r}
+names(leaves) #shows the column headers
+```
+
+lets now fix them using the names function. 
+```{r}
+names(leaves)<-c("Tree_num", "Species" , "Leaf_num" ,  "DBH_cm", "Petiole_length" , "Total_length_cm", "Middle_lobe_length_cm" , "Middle_lobe_width_cm", "Person" )
+```
+
+double checking. 
+```{r}
+names(leaves)
+```
+
+## Fixing Species
+
+species is already a factor variable as I did that above, so I can use levels to see what the data variations  are.
+```{r}
+levels(leaves$Species)
+```
+We have 3 norway maples, one spelled wrong, and with a capital m and a lowercase m. Then we have 3 red maples  and 3 sugar maples. So we will have to fix all of those as well. 
+
+### Fixing the norways
+```{r}
+fix<- which(leaves$Species== "Norway mapel" | leaves$Species== "Norway maple" )
+leaves$Species[fix]<- "Norway Maple" # make sure to use the brackets and not the ()! 
+```
+
+### Fixing the reds
+
+```{r}
+fixred<- which(leaves$Species== "red maple" | leaves$Species== "Red maple")
+leaves$Species[fixred]<- "Red Maple" #if I did fix again as my varialbe, we may run into some problems later on if we only run parts of this rmd. 
+```
+I used Red Maple for datum consistency. 
+
+### Fixing the sugars
+
+```{r}
+fixsugar<- which(leaves$Species=="sugar maple" | leaves$Species== "Sugar mapel")
+leaves$Species[fixsugar]<- "Sugar Maple"
+```
+
+```{r}
+levels(leaves$Species)
+```
+this is annoying R thing. As all of the incorrect spellings are still options for that column, so they still come up as 'levels.' But if you check the data the code worked.
+
+HERE IS THE CODE THAT FIXES THE LEVELS AFTER YOU DO THE RELEVELING:
+
+```{r}
+leaves$Species<-factor(leaves$Species)
+levels(leaves$Species)
+```
+
+
+## Selecting just the Sugar Maples
+
+```{r}
+sugar<- leaves %>% filter(Species=="Sugar Maple")
+```
+This was the oddest thing, I ran it the first time and it did not work. I ran all my code again and it still did not work. I ran another homework set and then reran this one and it worked. What the heck!
+
+I BELIEVE THE REASON FOR THIS PROBLEM IS THAT YOU HAVE A TYPO IN LINE 10 WITH `library(dplyr)' IN WHICH YOU SPELLED `dplyr` INCORRECTLY. THUS, THE CORRECT FILTER FUNCTION IS NOT LOADED. TRY FIXING IT AND RUN AGAIN.
+
+
+## remove undesired columns
+```{r}
+sugar<- sugar %>% select(-"Person", -"Leaf_num", -"Tree_num") #select is for columns, slice is for rows, I keep mixing those up!
+```
+
+## Make a histogram??
+I do not think we learned this...
+
+WE SAW IT IN CHAPTER 2 SO I PUT IT HERE AGAIN.
+```{r}
+geom_histogram(sugar$petiole_length)
+```
+Rae's rusty attempt at a histogram. 
+
+The book's correct methodology. 
+```{r}
+ggplot(sugar, aes(x=Petiole_length)) + geom_histogram()
+# use the ggplot function to take sugar and then aes (wish I knew what this stood for) so the x axis is petiole length. then you tell it to make a histogram. 
+```
+It is not the prettiest on the block. Soon I reckon we will learn how to spruce it up a bit and get it ready for prom.
+
+HOORAY FOR HISTOGRAM PROM!
