@@ -7,7 +7,7 @@ output: html_document
 ## Setting up R
 ```{r}
 rm(list=ls())
-library(dbplyr)
+library(dplyr)
 library(here)
 library(ggplot2)
 ```
@@ -65,19 +65,15 @@ I used Red Maple for datum consistency.
 ### Fixing the sugars
 
 ```{r}
-fixsugar<- which(leaves$Species=="sugar maple" | leaves$Species== "Sugar mapel")
+fixsugar<- which(leaves$Species=="sugar maple" | leaves$Species== "Sugar mapel" | leaves$Species=="Sugar maple")
 leaves$Species[fixsugar]<- "Sugar Maple"
 ```
 
-```{r}
-levels(leaves$Species)
-```
-this is annoying R thing. As all of the incorrect spellings are still options for that column, so they still come up as 'levels.' But if you check the data the code worked.
 
 HERE IS THE CODE THAT FIXES THE LEVELS AFTER YOU DO THE RELEVELING:
 
 ```{r}
-leaves$Species<-factor(leaves$Species)
+leaves$Species<-factor(leaves$Species) #reset the factor levels to what are there, so you can get the new ones. 
 levels(leaves$Species)
 ```
 
@@ -87,10 +83,6 @@ levels(leaves$Species)
 ```{r}
 sugar<- leaves %>% filter(Species=="Sugar Maple")
 ```
-This was the oddest thing, I ran it the first time and it did not work. I ran all my code again and it still did not work. I ran another homework set and then reran this one and it worked. What the heck!
-
-I BELIEVE THE REASON FOR THIS PROBLEM IS THAT YOU HAVE A TYPO IN LINE 10 WITH `library(dplyr)' IN WHICH YOU SPELLED `dplyr` INCORRECTLY. THUS, THE CORRECT FILTER FUNCTION IS NOT LOADED. TRY FIXING IT AND RUN AGAIN.
-
 
 ## remove undesired columns
 ```{r}
@@ -98,13 +90,6 @@ sugar<- sugar %>% select(-"Person", -"Leaf_num", -"Tree_num") #select is for col
 ```
 
 ## Make a histogram??
-I do not think we learned this...
-
-WE SAW IT IN CHAPTER 2 SO I PUT IT HERE AGAIN.
-```{r}
-geom_histogram(sugar$petiole_length)
-```
-Rae's rusty attempt at a histogram. 
 
 The book's correct methodology. 
 ```{r}
