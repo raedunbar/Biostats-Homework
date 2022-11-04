@@ -119,10 +119,24 @@ Our F is 2.561 and p-valye is 0.117.  the Multiple R-squared is 0.05747 so only 
 
 Does the abundance of worms differ between Donnerville and the Kip Tract?
 
+We should have checked the spread of worms to make sure our data is good first. Oops..
+```{r}
+
+```
+
+
 ### Plotting the relationship
 
-We have categorical binary data and discrete data (we did not count .5 of a worm ahahha). So, a boxplot would work. 
+We have categorical !nominal! data and discrete data (we did not count .5 of a worm ahahha). So, a boxplot would work. 
 
+with count data we can use a bar graph, because we have no spread. At least when we do the total worms like this.
+
+```{r}
+total<- soil %>% filter(soil$Forest=="KIP TRACT" | soil$Forest== "DONNERVILLE") %>% group_by(Forest) %>% summarize(total.worms=sum(Worms))
+ggplot(total, aes(x=Forest, total.worms))+ geom_bar(stat="identity", position="dodge") + theme_bw()
+```
+
+I did a boxplot, because I thought there was spread, given we sampled the number of worms at different plots.
 ```{r}
 wormies<-soil %>% filter(soil$Forest=="KIP TRACT" | soil$Forest== "DONNERVILLE")
 ggplot(wormies, aes(x=Forest, y=Worms)) + geom_boxplot()+ geom_point(alpha=3, size=5, colour="light grey") +theme_bw()
@@ -149,13 +163,15 @@ The p value is less than 0.05! Thus we can rejec the Null. there is significantl
 ## Question 3
 Does the abundance of soil Magnesium (Mg_ppm) differ between Peavine and South Hammond?
 
-Soil magnesium is ratio data and the two forests would make the explantory categorical data. So, a boxplot would work. 
+Soil magnesium is ratio data and the two forests would make the explantory categorical data. So, a boxplot would work. Running a boxplot is correct. 
 
 ```{r}
 magneto<- soil %>% filter(soil$Forest=="PEAVINE" | soil$Forest=="SOUTH HAMMOND" )
+magneto$Forest<-factor(magneto$Forest)
 ggplot(magneto, aes(x=Forest, y=Mg_ppm))+geom_boxplot()+geom_point(size=5, colour="orange", size=5)+ theme_bw()
 ```
 There appears to be more magnesium in South hammond forest, but not a significant degree more. 
+May want to check to see if that is an outlier or not. When you look at the data it does not appear to be, as there is 92 and an 84ppm. 
 
 ### Running a test to see
 
@@ -164,9 +180,16 @@ explanatory data is categorical, response is ratio, so we are looking at a two s
 ```{r}
 t.test(Mg_ppm~Forest, data=magneto)
 ```
-The p value is 0.2222 which means we must accept the Null hypothesis. the amount of magnesium does not differ significantly between Peavine and South Hammond.
+The p value is 0.2222 which means we must accept the Null hypothesis.The amount of magnesium does not differ significantly between Peavine and South Hammond.
 
+The assumptions of a student t-test is a special case:
+Assumptions:
+The book we are using is not a stats book. Because the t test uses a different way to do the math it is not designed to be used with the autoplot. T-test is a special case of anaylsis of variance. We could do it with a linear model (lm()) and then use autoplot to check it.
 
+```{r}
+ggplot(magneto, aes(Forest, y=Mg_ppm))+geom_point(position="jitter", size=2, alpha=0.5)+geom_boxplot() + theme_bw()
+# jitter moves the dots around so they are not stacked on eachother.
+```
 
 ## Question 4
 Does the abundance of zinc (Zn_ppm) differ among forests?
@@ -201,7 +224,7 @@ Overall we are good most likely.
 ```{r}
 anova(alltwees)
 ```
-The p value is much greaterr than 0.05 and so we accept the Null hypothesis. 
+The p value is much greater than 0.05 and so we accept the Null hypothesis. 
 
 
 
