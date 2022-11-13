@@ -1,0 +1,319 @@
+---
+title: "Making Pretty Graphs"
+author: "Rae Dunbar"
+date: "11/11/2022"
+output: html_document
+---
+
+```{r}
+# You can add multiple packages at once usig concatenate 
+#install.packages(c(
+ # "colorBlindness", "directlabels", "dplyr", "ggforce", "gghighlight", 
+#  "ggnewscale", "ggplot2", "ggraph", "ggrepel", "ggtext", "ggthemes", 
+ # "hexbin", "Hmisc", "mapproj", "maps", "munsell", "ozmaps", 
+ # "paletteer", "patchwork", "rmapshaper", "scico", "seriation", "sf", 
+ # "stars", "tidygraph", "tidyr", "wesanderson" 
+#))
+
+# I commented it out becausee it crashed R, and Edward told me that he was able to do half of it thus far without those packages. 
+```
+
+R Cheatsheeet for GGPlot!
+ http://www.rstudio.com/resources/cheatsheets/
+
+In this Markdown we will go over:
+
+1. About the mpg dataset included with ggplot2, Section 2.2.
+
+2. The three key components of every plot: data, aesthetics and geoms, Section 2.3.
+
+3. How to add additional variables to a plot with aesthetics, Section 2.4.
+
+4. How to display additional categorical variables in a plot using small multiples created by faceting, Section 2.5.
+
+5. A variety of different geoms that you can use to create different types of plots, Section 2.6.
+
+6. How to modify the axes, Section 2.7.
+
+7. Things you can do with a plot object other than display it, like save it to disk, Section 2.8.
+
+# Getting the Data Set 
+
+it is a dataset free with ggplot2
+```{r}
+rm(list=ls())
+library(ggplot2)
+```
+
+We will be answering the following: 
+How are engine size and fuel economy related? Do certain manufacturers care more about fuel economy than others? Has fuel economy improved in the last ten years?
+
+We know how to do a simple plot. But we have been diong aes(x= and y=) in reality R does not need that, it knows the first is x and the second is y.
+
+Stahp wasting code with that Rae!
+
+```{r}
+ggplot(mpg, aes(displ, hwy)) + 
+  geom_point()
+```
+
+TADA
+
+Now Lest discuss other aesthetics: colour, shape and Size!
+
+```{r}
+ggplot(mpg, aes(displ, hwy, colour = class)) + 
+  geom_point()+ theme_bw()
+```
+Now we have colour based on class, which is car type. 
+
+Here is how you can change the color of your points AND get rid of a lengend, which is a moment I have been waiting for. Those darn legends. 
+
+```{r}
+ggplot(mpg, aes(displ, hwy)) + geom_point(colour = "blue") + theme_bw()
+# Do colour inside geom_point!!!!
+```
+
+If you do aes with it, its does a legend and messes up the color :(
+
+```{r}
+ggplot(mpg, aes(displ, hwy)) + geom_point(aes(colour = "blue"))
+```
+
+Yup, that is not blue, nor did we want a legend. 
+
+## Facet_Wrap
+
+we've learned this before:
+
+```{r}
+ggplot(mpg, aes(displ, hwy)) + 
+  geom_point() + 
+  facet_wrap(~class)+ theme_bw()
+```
+
+```{r}
+ggplot(mpg, aes(displ, hwy)) + 
+  geom_point() + 
+  facet_wrap(~cty)+ theme_bw()
+```
+cty and  hwy record mpg for city and highway driving. So if you do facet wrap with that each graph is created for each mpg, which just looks silly and pointless.
+
+## Plot Geoms!
+
+geom_smooth() fits a smoother to the data and displays the smooth and its standard error. By smoother it means line of best fit.
+
+geom_boxplot() produces a box-and-whisker plot to summarise the distribution of a set of points.
+
+geom_histogram() and geom_freqpoly() show the distribution of continuous variables.
+
+geom_bar() shows the distribution of categorical variables.
+
+geom_path() and geom_line() draw lines between the data points. A line plot is constrained to produce lines that travel from left to right, while paths can go in any direction. Lines are typically used to explore how things change over time.
+
+### SMOOOTHER:
+
+```{r}
+ggplot(mpg, aes(displ, hwy)) + 
+  geom_point() + 
+  geom_smooth()
+#> `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+```
+
+This overlays the scatterplot with a smooth curve, including an assessment of uncertainty in the form of point-wise confidence intervals shown in grey. If you’re not interested in the confidence interval, turn it off with geom_smooth(se = FALSE).
+
+method = "loess", the default for small n, uses a smooth local regression (as described in ?loess). The wiggliness of the line is controlled by the span parameter, which ranges from 0 (exceedingly wiggly) to 1 (not so wiggly).
+
+```{r}
+ggplot(mpg, aes(displ, hwy)) + 
+  geom_point() + 
+  geom_smooth(span = 0.2)
+#> `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+
+ggplot(mpg, aes(displ, hwy)) + 
+  geom_point() + 
+  geom_smooth(span = 1)
+#> `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+```
+You can see the first one is very wiggly.
+
+method = "lm" fits a linear model, giving the line of best fit. So if you do not want the deafaul regression do that.
+
+```{r}
+ggplot(mpg, aes(displ, hwy)) + 
+  geom_point() + 
+  geom_smooth(method = "lm")
+#> `geom_smooth()` using formula 'y ~ x'
+```
+method = "rlm" works like lm(), but uses a robust fitting algorithm so that outliers don’t affect the fit as much. It’s part of the MASS package, so remember to load that first.
+```{r}
+#install.packages("MASS") already ran this
+library("MASS")
+```
+
+```{r}
+ggplot(mpg, aes(displ, hwy)) + 
+  geom_point() + 
+  geom_smooth(method = "rlm")
+``` 
+The line is shifted down a bit and has a smaller range.
+
+## Boxplots and Jittered Points:
+
+Jittering, geom_jitter(), adds a little random noise to the data which can help avoid overplotting.
+```{r}
+ggplot(mpg, aes(drv, hwy)) + geom_jitter()
+```
+looks weird...
+
+
+Boxplots, geom_boxplot(), summarise the shape of the distribution with a handful of summary statistics.
+You know this.
+
+Violin plots, geom_violin(), show a compact representation of the “density” of the distribution, highlighting the areas where more points are found.
+
+```{r}
+ggplot(mpg, aes(drv, hwy)) + geom_violin()
+```
+That is crazy. How come this is not used in papers at all? Can I use it or is it considered improper???
+
+For jittered points, geom_jitter() offers the same control over aesthetics as geom_point(): size, colour, and shape. For geom_boxplot() and geom_violin(), you can control the outline colour or the internal fill colour.
+
+COOL.
+
+## Histograms and Frequency Polygons
+
+FREQUENCY POLYGONS CEHCK THIS OUT
+binwidth works foor this one too
+```{r}
+ggplot(mpg, aes(hwy)) + geom_freqpoly( binwidth=1)
+#> `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+# bigger binwidth less points
+```
+
+Do look at several of these bois do this:
+
+```{r}
+ggplot(mpg, aes(displ, colour = drv)) + 
+  geom_freqpoly(binwidth = 0.5)
+```
+TADA
+
+you can do the same with histogram, but you use fill instead of colour:
+
+```{r}
+ggplot(mpg, aes(displ, fill = drv)) + 
+  geom_histogram(binwidth = 0.5) + 
+  facet_wrap(~drv, ncol = 1)
+```
+nice. 
+
+## Bar Charts
+
+```{r}
+ggplot(mpg, aes(manufacturer)) + 
+  geom_bar()
+```
+
+If you want to have something on the y axis that is not count, like something as another part of your data frame, you have to do aes(x,y) and then geom_bar(stat = "identity"). 
+
+EX:
+```{r}
+drugs <- data.frame(
+  drug = c("a", "b", "c"),
+  effect = c(4.2, 9.7, 6.1)
+)
+ggplot(drugs, aes(drug, effect)) + geom_bar(stat = "identity")
+```
+
+## TIME SERIES line and path plots
+
+Line plots join the points from left to right, while path plots join them in the order that they appear in the dataset
+
+ Line plots usually have time on the x-axis, showing how a single variable has changed over time. Path plots show how two variables have simultaneously changed over time, with time encoded in the way that observations are connected.
+ 
+```{r}
+economics
+```
+
+```{r}
+ggplot(economics, aes(date, unemploy / pop)) +
+  geom_line()
+#u can use division in geom! 
+
+ggplot(economics, aes(date, uempmed)) +
+  geom_line()
+```
+To examine this relationship in greater detail, we would like to draw both time series on the same plot. We could draw a scatterplot of unemployment rate vs. length of unemployment, but then we could no longer see the evolution over time. The solution is to join points adjacent in time with line segments, forming a path plot.
+
+Below we plot unemployment rate vs. length of unemployment and join the individual observations with a path. Because of the many line crossings, the direction in which time flows isn’t easy to see in the first plot. In the second plot, we colour the points to make it easier to see the direction of time.
+
+```{r}
+year <- function(x) as.POSIXlt(x)$year + 1900
+# I do not know how the above code does this :(
+ggplot(economics, aes(unemploy / pop, uempmed)) + 
+  geom_path(colour = "grey50") +
+  geom_point(aes(colour = year(date)))
+```
+## We know how to modify access, 
+butyou can also decide to have none, by using NULL
+
+```{r}
+# Remove the axis labels with NULL
+ggplot(mpg, aes(cty, hwy)) +
+  geom_point(alpha = 1 / 3) + 
+  xlab(NULL) + 
+  ylab(NULL)
+```
+
+## Setting limits to x and y axis!!!
+
+```{r}
+ggplot(mpg, aes(drv, hwy)) +
+  geom_jitter(width = 0.25)
+
+ggplot(mpg, aes(drv, hwy)) +
+  geom_jitter(width = 0.25) + 
+  xlim("f", "r") + 
+  ylim(20, 30)
+#> Warning: Removed 140 rows containing missing values (geom_point).
+  
+# For continuous scales, use NA to set only one limit
+ggplot(mpg, aes(drv, hwy)) +
+  geom_jitter(width = 0.25, na.rm = TRUE) + 
+  ylim(NA, 30)
+```
+## Output 
+
+Most of the time you create a plot object and immediately plot it, but you can also save a plot to a variable and manipulate it:
+
+```{r}
+p <- ggplot(mpg, aes(displ, hwy, colour = factor(cyl))) +
+  geom_point()
+```
+
+Once you have a plot object, there are a few things you can do with it:
+
+Render it on screen with print(). This happens automatically when running interactively, but inside a loop or function, you’ll need to print() it yourself.
+
+
+To save it to whatever folder your Rmd is in you can do this:
+```{r}
+# Save png to disk
+ggsave("plot.png", p, width = 5, height = 5)
+```
+ 
+you can also run summary
+```{r}
+summary(p)
+```
+Do not know why you will do the below:
+
+Save a cached copy of it to disk, with saveRDS(). This saves a complete copy of the plot object, so you can easily re-create it with readRDS().
+```{r}
+
+saveRDS(p, "plot.rds")
+q <- readRDS("plot.rds")
+```
+
+All Done!
