@@ -67,7 +67,7 @@ ggplot(mpg, aes(displ, hwy, colour = class)) +
 ```
 Now we have colour based on class, which is car type. 
 
-Here is how you can change the color of your points AND get rid of a lengend, which is a moment I have been waiting for. Those darn legends. 
+Here is how you can change the color of your points AND get rid of a legend, which is a moment I have been waiting for. Those darn legends. 
 
 ```{r}
 ggplot(mpg, aes(displ, hwy)) + geom_point(colour = "blue") + theme_bw()
