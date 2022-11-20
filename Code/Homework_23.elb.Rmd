@@ -1,0 +1,106 @@
+---
+title: 'Making Graphs: Whisker, Histogram,'
+author: "Rae Dunbar"
+date: "10/24/2022"
+output: html_document
+---
+
+## Setting up R
+```{r}
+rm(list=ls())
+library(dplyr)
+library(here)
+library(ggplot2)
+```
+
+## Getting in the data
+```{r}
+soil<- read.csv(here("Data for the code", "soil_data.csv"))
+```
+
+## Checking out the data
+```{r}
+View(soil)
+```
+
+## Diving right in to make the figures
+
+And we get this mess:
+```{r}
+
+ggplot(soil, aes(x=SOM_percent, y=Field.Name)) + theme_bw() +geom_point()
+```
+
+## A Sad Realization
+
+So we have a big issue, the forest where each sample was taken is in a column with other data we do not need. Come on people, we are suppose to put one datum per entry! 
+
+We want our data per forest, so Edward and I in the pub are going to put our heads together and figure it out. 
+
+I'M GLAD YOU WORKED TOGETHER
+
+
+## The Power of 2
+```{r}
+soil2<- mutate(soil,forest=NA) #we need to create a new column called forest.I just filled it in with NA for now.
+```
+
+To back fill it with the proper forest names we could do which() though that would be tedious. I decided to just fill them in manually of sorts, with 5 lines of code. I bet there is a quicker way that I hope you show me in class. I wonder if you can do it in the mutate code somehow. I did use concatenate to try and do that, but it needed me to write each forest name 9 times. Is there a way aside from a loop? 
+
+I THINK WHICH WOULD BE LESS TEDIOUS, AND IT HAS THE ADVANTAGE OF BEING AUTOMATED, AND NOT REQUIRING A HUMAN TO PARSE THE FILE MENTALLY.
+
+ANY TIME YOU ARE DOING SOMETHING OVER AND OVER, IT IS TIME TO LOOK FOR A WAY TO STREAMLINE YOUR CODE. HERE, A LOOP WOULD LIKELY BE BEST.
+```{r}
+#The code below fills in the data from row 1 to 9 in the forest column.
+soil2[1:9,"forest"]<- "Degrasse" 
+soil2[10:18,"forest"]<-"Donnerville"
+soil2[19:27,"forest"]<-"Kip Tract"
+soil2[28:36,"forest"]<- "Peavine"
+soil2[37:45,"forest"]<- "South Hammond"
+
+glimpse(soil2)
+```
+
+At first, the glimpse showed me that south Hammond was filled in as the first few entries, which is wrong. I made the error of doing 1-9 rather than 1:9. Now it seems to work.
+
+## Making Figures finally!!!
+```{r}
+ggplot(soil2, aes(x=forest, y=SOM_percent)) +theme_bw() + geom_point() 
+```
+You could do colour=Field.Name to show each plot, but you would have to get rid of the key for that graph, as the key is giant! I do not know how to get rid of the key, so I left it black and white for now. 
+
+CHAPTER 8 WILL HELP YOU GET RID OF THE KEY
+
+```{r}
+ggplot(soil2, aes(y=SOM_percent, colour=forest))+theme_bw() +geom_boxplot()
+#this one I did a big differently, by differentiating between the forest treatment by color. 
+```
+The vast range in the peavine forest is very interesting, given the small range in the other forests. There is also a noticeable contract in SOM of Peavine when compared to Degrasse and South Hammond. 
+
+Doing the color method rather than having forest on the x axis, causes the x axis to randomly have numbers which makes no sense, so I will not do that in the future.
+
+```{r}
+ggplot(soil2, aes(x=SOM_percent, colour=forest)) + theme_bw() +geom_histogram()
+```
+This is weird.... I think making several histograms per forest might make fore sense. 
+
+```{r}
+ggplot(soil2, aes(x=SOM_percent)) + theme_bw() +geom_histogram(bins = 10)+facet_wrap(~forest) #bins increases the width of the boxes so it is easier to see. 
+```
+
+This looks a bit better, though I still do not like histograms. 
+
+## On to Calcium!
+
+```{r}
+ggplot(soil2, aes(x=forest, y=BaseSaturationCa)) + xlab("Forest Type") + ylab("Calcium ppm") +theme_bw() + geom_point() 
+# You can change you x and y labels by adding more layers to your graph with xlab and ylab
+```
+```{r}
+ggplot(soil2, aes(y=BaseSaturationCa, x=forest))+theme_bw()+ xlab("Forest Type") + ylab("Calcium ppm") +geom_boxplot()
+```
+```{r}
+ggplot(soil2, aes(x=BaseSaturationCa)) + theme_bw() + xlab("Forest Type") + ylab("Calcium ppm") +geom_histogram(bins = 10)+ facet_wrap(~forest) #bins increases the width of the boxes so it is easier to see. 
+```
+YOU ARE VERY AGAINST HISTOGRAMS; I CAN UNDERSTAND FROM AN AESTHETIC POINT OF VIEW BUT THEY ARE VERY HELPFUL FOR UNDERSTANDING YOUR DATA.
+
