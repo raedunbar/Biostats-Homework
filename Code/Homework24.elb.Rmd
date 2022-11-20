@@ -1,0 +1,123 @@
+---
+title: "Part One of Chapter 5 Running Tests"
+author: "Rae Dunbar"
+date: "10/27/2022"
+output: html_document
+---
+
+## Setting up R
+
+```{r}
+rm(list=ls())
+library(dplyr)
+library(here)
+library(ggplot2)
+```
+
+## Chi Squared Tests
+
+The χ2 contingency table analysis is an analysis of count data. It is essentially a test of association among two or more categorical variables. As in both x and y variables are categorical. 
+
+### Sucking in the Data for chi squared, test
+
+```{r}
+birds<-read.csv(here("Data for the code", "ladybirds.csv"))
+ozone<-read.csv(here("Data for the code", "ozone.csv"))
+```
+
+lets look at the birds data
+```{r}
+glimpse(birds)
+```
+We want to see if the frequency of color differs between the two habitat types.
+```{r}
+totals<-birds %>% group_by(Habitat, colour) %>% summarise(total.number= sum(number))
+#group by habitat and colour and then make a new table with those two things and a new total based on the number. 
+```
+
+Make a figure to see it
+```{r}
+ggplot(totals, aes(x=Habitat, y=total.number, fill=colour)) + geom_bar(stat='identity', position='dodge')
+#stat = ‘identity’ tells ggplot not to try and calculate anything from the data. ggplot() can do stuff if you let it, but in this case we want ggplot() to use just what we’ve given it to use. position = ‘dodge’ is a request to put the two bars in each Habitat group (e.g. black and red counts) next to each other.If you don’t use the position = ‘dodge’ option you’ll end up with a stacked barplot
+```
+Why is black red and red is blue :((( Lets fix that!
+
+```{r}
+ggplot(totals, aes(x=Habitat, y=total.number, fill=colour)) + geom_bar(stat='identity', position='dodge') + scale_fill_manual(values=c(black="black", red="red")) # manually fill the bar graphs their aside colors.
+```
+That is soooo bright. 
+
+All right, so is there a statistical difference?
+
+## Running a Chi Test
+To make this function do a two-way contingency test, we must give it a matrix of the total counts. Although they can look superfically similar, a matrix is different from a data frame.
+
+### Making a Matrix
+
+We introduce one trick here that transforms this data frame into the matrix we need for the χ 2 test: the function xtabs(). If you have used Excel, you may be familiar with a pivot table for doing cross-tabulation. xtabs() is cross(x)-tabulation:
+
+```{r}
+lady.mat<-xtabs(number~Habitat + colour, data=birds)
+lady.mat
+#The formula reads, ‘Please cross-tabulate the number column of counts in the totals data frame by the Habitat and morph_colour variables.’ This carries out exactly the same calculation as the group_by() and summarise() functions did to make totals, but now we end up with a matrix. Nice.
+
+```
+### Chi-test
+
+```{r}
+chisq.test(lady.mat)
+```
+
+
+For those of you who are familiar with the mechanics of the χ2 test (row sums, column sums, observed and expected values), you will be pleased to know that all of these are accessible to you, simply by assigning the values returned by chisq.test() to a name and then looking at these:
+
+```{r}
+lady.chi<- chisq.test(lady.mat)
+names(lady.chi)
+lady.chi$expected
+```
+
+## Two Sample T TEST!!!
+
+Using the ozone data 
+
+```{r}
+glimpse(ozone)
+```
+well isint that swell, but not as swell as Gus. 
+
+GUS THANKS YOU FOR THIS VOTE OF CONFIDENCE!
+
+Making a figure
+```{r}
+ggplot(ozone, aes(x = Ozone)) + geom_histogram(binwidth = 10) + facet_wrap(~ Garden.location, ncol = 1) + theme_bw()
+```
+I actually do not know what the ncol=1 does. Does it tell it not to calculate anything???
+
+NOPE - IT JUST TELLS IT TO USE ONE COLUMN INSTEAD OF ONE ROW FOR THE FACET PLOTS
+
+the peaks and spread type is different for east and west, howeverr there is alot of overlap, so we will have to run a T test. 
+
+```{r}
+t.test(Ozone~Garden.location, data=ozone)
+```
+what do 8.094171 24.065829 mean? Are those the confidence interval range? But 77 and 61 are wayy out of that? 
+
+P value is very small, so there is a significant difference. 
+
+Now, back to the word ‘Welch’. A quick look in the help files (?t.test) or on Wikipedia reveals that this method allows one of the assumptions of the standard two-sample t-test to be relaxed—that of equal variance. While you may have made the effort to assess the assumption of equal variance above, and found the variances relatively similiar, you now know that there are options for when this assumption is not met!
+
+You might have once been taught to test for equality of variance in a two-sample t-test. It isn’t necessary to do this when using the Welch version—and, actually, we don’t think it is ever a very good idea—but if feel you must make a formal test, there are several functions you could use.
+
+## Doing a Variance test
+
+```{r}
+ var.test(Ozone ~ Garden.location, data = ozone) #Ozone is x value and garden location are the treatments
+```
+
+Do not recall what this means, but there ya have it!
+
+NOT SURE WHICH PART YOU'RE REFERENCING WHEN YOU INDICATE THAT YOU DON'T RECALL WHAT IT MEANS.
+
+I REALLY APPRECIATE THAT YOU PUT SO MUCH OF YOUR THINKING DOWN ON THE PAGE
+
