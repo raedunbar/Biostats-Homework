@@ -1,0 +1,152 @@
+---
+title: "Finishing Chpt 5 Stat Tests"
+author: "Rae Dunbar"
+date: "10/30/2022"
+output: html_document
+---
+
+## Setting up R
+
+```{r}
+rm(list=ls())
+library(dplyr)
+library(here)
+library(ggplot2)
+library(ggfortify) #new packagee yeehaw!
+```
+
+## Importing Data
+```{r}
+here()
+plant<- read.csv(here("Data for the code", "plant.growth.rate.csv"))
+```
+
+```{r}
+glimpse(plant)
+```
+
+```{r}
+ggplot(plant,
+aes(x = soil.moisture.content, y = plant.growth.rate)) +
+geom_point() +
+ylab("Plant Growth Rate (mm/week)") + theme_bw()
+```
+
+## Creating the lm
+```{r}
+model_pgr<- lm(plant.growth.rate~soil.moisture.content, data=plant)
+#Fit a linear model, where we hypothesize that plant growth rate is a function of soil moisture content, using the variables from the plant_gr data frame
+```
+
+## Using autoplot to plot it
+```{r}
+autoplot(model_pgr, smooth.colour=NA)
+#In the absence of this argument, the default presentation of the diagnostic plots includes a ‘wiggly line’ fitted by locally weighted regression. The = NA suppresses the line.
+```
+
+They are all based around the residuals—errors around the fitted line. 
+
+## What these graphs mean
+
+Top left. This panel is about the ‘systematic part’ of the model; it tells us whether a line is appropriate to fit to the data. If things have gone wrong, hump-shapes or valleys will be apparent. These would mean that the structure of your model was wrong. For example, fitting a straight line didn’t work. Lots of people suggest you look at this to evaluate the assumption of equal variance—homo- vs heteroskedasticity. But there is a better (bottom left) for this.
+
+2. Top right. This evaluates the assumption of normality of the resid- uals. The dots are the residuals, and the dashed line the expectation under the normal distribution. This is a much better tool than mak- ing a histogram of the residuals, especially with small sample sizes . . . like less than 100.
+
+We can see here that all the residuals are close to the line meaning there is a strong linear relationship! 
+
+
+3. Bottom left. This evaluates the assumption of equal variance. The y-axis is a standardized (all positive) indicator of the variation. Linear models assume that the variance is constant over all predicted values of the response variable. There should be no pattern. But there might be one if, for example, the variance increases with the mean, as it might with count data (see Chapter 7).
+
+4. Bottom right. This evaluates leverage, a tool not only to detect influential data points, ones that move the gradient more than might be expected, but also to detect outliers. Your friends, mentors, or supervisor might think this is important. If they do, speak with them...
+
+What do you think Erika?
+
+I THINK IT IS IMPORTANT TO GENERALLY BE AWARE THAT THERE MIGHT BE OUTLIERS AND TO ADDRESS THEM SYSTEMATICALLY. AND YOU DON'T NEED TO DO ANYTHING HERE.
+
+
+## Making an ANOVA
+
+```{r}
+anova(model_pgr)
+```
+F value is degrees of freedom at 156,08 
+and a pvalue of 2.2e-16, so super small and thus significant.
+
+SO HOW DO YOU INTERPRET IT?
+
+```{r}
+summary(model_pgr)
+```
+The estimates provided in the summary table (the first column) corres- pond to the estimates, in a linear regression, of the intercept and slope associated with the explanatory variable. Can you guess which is the inter- cept . . . More seriously, make sure you understand that the gradient/slope is associated with the explanatory variable, in this case soil moisture, which is also the x-axis of our figure, the values of which are associated with differences in plant growth rate.
+
+Soil moisture had a positive effect on plant growth. For each unit increase in soil moisture, plant growth rate increased by 12.7 mm/week (slope = 12.7, t = 12.5, d.f. = 48, p < 0.001).
+
+## Plotting a simplar linear regression
+
+```{r}
+ggplot(plant, aes(x = soil.moisture.content, y = plant.growth.rate)) +
+geom_point() +
+geom_smooth(method = 'lm') + ylab("Plant Growth Rate (mm/week)") + theme_bw()
+
+#the smooth part is what shoves a linear model onto it.
+```
+## Analysis of Variance: One-Way ANOVA
+
+this is similar to a linear regression model, aaccept you do this test when the explanatory variable is a categorical variable. 
+
+```{r}
+daphnia<- read.csv(here("Data for the code","Daphniagrowth.csv"))
+```
+
+```{r}
+glimpse(daphnia)
+```
+
+
+```{r}
+ggplot(daphnia, aes(x = parasite, y = growth.rate)) + geom_boxplot() +
+theme_bw()+ coord_flip()
+
+#coord_flip() to actually read the names.
+```
+
+## Construct the ANOVA
+```{r}
+model_grow<- lm(growth.rate~parasite, data=daphnia)
+```
+
+
+## Check the Assumptions
+
+```{r}
+autoplot(model_grow, smooth.colour=NA)
+```
+
+In the upper right graph the residuals are not close to the line as in the soil data, but this is within the normal amount of discrepency. 
+
+## Making a one way ANOVA
+```{r}
+anova(model_grow)
+```
+
+Again a significant result, the p value is very low. 
+
+```{r}
+summary(model_grow)
+```
+this is different than the linear regression model. It shows the control- intercept, and then the different treatments in alphabetical order. 
+
+Treatment contrasts report differences between the reference level (in this lucky case, the control) and the other levels. So, in the summary table, the numbers associated with each parasite are differences between growth rates associated with that parasite and the control. This is why they are all negative. These negative distances, or contrasts, are the lengths of the black lines in this next figure. 
+
+```{r}
+# get the mean growth rates
+sumDat<-daphnia %>% group_by(parasite) %>%
+summarise(meanGR = mean(growth.rate))
+```
+
+
+In the next chapter we cover what to do if you’re not so lucky with the word ‘control’ being the first in the alphabetical listing of the treat- ment levels. This can be a problem, since it will mean the coefficients reported in the summary table are not so useful, as they won’t be dif- ferences of treatments from control. Spoiler, the solution involves the relevel() function.
+
+Interesting!
+
+GOOD JOB!

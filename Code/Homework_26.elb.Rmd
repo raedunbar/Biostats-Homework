@@ -1,0 +1,240 @@
+---
+title: "Working with Statistical Tests"
+author: "Rae Dunbar"
+date: "11/2/2022"
+output: html_document
+---
+
+## Set up R
+
+```{r}
+rm(list=ls())
+library(here)
+library(tidyverse) # this gets you both ggplot and dplyr!!!
+library(ggfortify)
+```
+```{r}
+soil<- read.csv(here("Data for the code", "soil_reduced-1.csv"), stringsAsFactors=TRUE)
+```
+
+## Questions to answer for today
+
+1. Is there a relationship between Soil organic matter (SOM, %) and soil calcium (Ca_ppm)?
+
+2. Does the abundance of worms differ between Donnerville and the Kip Tract?
+
+3. Does the abundance of soil Magnesium (Mg_ppm) differ between Peavine and South Hammond?
+
+4. Does the abundance of zinc (Zn_ppm) differ among forests?
+
+## Verifying the Data
+lets look at our variables, SOM, vacium, forests, worms, mg, and zinc. 
+
+```{r}
+levels(soil$Forest)
+```
+the right amount of forests, yay. 
+
+Lets verify SOM and calcium
+
+Starting with SOM, lets do a histogram to make sure there are no outliers.
+```{r}
+ggplot(soil, aes(x=SOM_percent))+geom_histogram()+ theme_bw()
+```
+It does not seeem like thier is an outlier. The data does have a right tail and skewed left. 
+
+Now check soil calcium. 
+
+```{r}
+ggplot(soil, aes(x=Ca_ppm))+geom_histogram()+theme_bw()
+```
+This also looks reasnoable. 
+
+Lets also just run a summary on all the variables:
+
+```{r}
+summary(soil)
+```
+There are some that appear to have otliers, Nitrate, worms, maye buffer_ph, and potassium. Thus far, Forest, SOM, and Ca all look good, so we can start with the quesitons.
+
+## Statistical Anaylsis 
+
+
+## Starting with question 1
+
+### Plot the Relationship
+they are both continuous data, so we should do a scatterplot.
+
+```{r}
+ggplot(soil, aes(x=SOM_percent, y=Ca_ppm, color=Forest, size=3))+geom_point()+theme_bw()
+```
+there appears to be no strong correlation between SOM and Ca. There is a weak positive linear relationship in which Ca increases as SOM increases. This would have a low R^2 (measures strength of relationship/correlation)
+
+The influence of a single point on the relationship of the data is called leverage.
+Datum that has a strong affect on the data, we say it has high leverage. Outliers has high leverage most of the time.
+
+Rise= 0-around 1,000
+run= 2- 53
+so slope is about 18ish. 
+The y intercept is around -20 could be 0. 
+
+What statistical model fits the data?
+
+Both response and predictor variables are continuous, so linear regression test seems most appropriate. 
+
+## Linear Regression Test
+
+first start with the linear model.
+```{r}
+SOM_CA_Mod<-lm(Ca_ppm~SOM_percent, data=soil)
+# the ~ is "as a function of" so its Ca as a function of SOM
+```
+
+Check model assumptions first, before interpreting. 
+
+```{r}
+autoplot(SOM_CA_Mod)
+```
+Assumptions of liinear regression (Including ANOVA)
+
+More or less the data is normally distributed.
+
+Based on my observations of the autoplot results, I'm modestly coomfortable that my data meets the lm() assumptions. 
+
+Now look at model outcome
+```{r}
+anova(SOM_CA_Mod)
+```
+The p value is 0.117, which is greater than 0.05. So we accept the NULL hypothesis, there is no meaningful statistical relationship between SOM and Ca. 
+
+```{r}
+summary(SOM_CA_Mod)
+```
+
+Y inteercept is 307.28 and slop is 5, It is sayig the intercept is statistically significant, but we do not care aboout that. 
+
+Our F is 2.561 and p-valye is 0.117.  the Multiple R-squared is 0.05747 so only 5% of Ca amount can be determineed by the amoount of SOM.
+
+## Question 2
+
+Does the abundance of worms differ between Donnerville and the Kip Tract?
+
+We should have checked the spread of worms to make sure our data is good first. Oops..
+```{r}
+
+```
+
+
+### Plotting the relationship
+
+We have categorical !nominal! data and discrete data (we did not count .5 of a worm ahahha). So, a boxplot would work. 
+
+with count data we can use a bar graph, because we have no spread. At least when we do the total worms like this.
+
+```{r}
+total<- soil %>% filter(soil$Forest=="KIP TRACT" | soil$Forest== "DONNERVILLE") %>% group_by(Forest) %>% summarize(total.worms=sum(Worms))
+ggplot(total, aes(x=Forest, total.worms))+ geom_bar(stat="identity", position="dodge") + theme_bw()
+```
+
+I did a boxplot, because I thought there was spread, given we sampled the number of worms at different plots.
+```{r}
+wormies<-soil %>% filter(soil$Forest=="KIP TRACT" | soil$Forest== "DONNERVILLE")
+ggplot(wormies, aes(x=Forest, y=Worms)) + geom_boxplot()+ geom_point(alpha=3, size=5, colour="light grey") +theme_bw()
+```
+
+Aside from the outliers of each, there is a noticiable difference in the amoount of worms between these forests. The mean is very different. I believe there will be a significant difference between them, but it probably will be close to 0.05 of a p value due to the Std.
+
+### Run the Test
+We have a categorical explantory and a discrete response variable, so we will run a chi squared test.
+
+YOU HAVE TO MAKE A MATRIX FIRST
+```{r}
+wormies$Forest<-factor(wormies$Forest)
+gummyWorms<-xtabs(Worms~Forest, data=wormies)
+# Have to do the categorical second and make sure that there is the right number of factors.
+```
+
+Chi-squared
+```{r}
+chisq.test(gummyWorms)
+```
+The p value is less than 0.05! Thus we can rejec the Null. there is significantly less worms in Donnerville compared to the kip tract.
+
+## Question 3
+Does the abundance of soil Magnesium (Mg_ppm) differ between Peavine and South Hammond?
+
+Soil magnesium is ratio data and the two forests would make the explantory categorical data. So, a boxplot would work. Running a boxplot is correct. 
+
+```{r}
+magneto<- soil %>% filter(soil$Forest=="PEAVINE" | soil$Forest=="SOUTH HAMMOND" )
+magneto$Forest<-factor(magneto$Forest)
+ggplot(magneto, aes(x=Forest, y=Mg_ppm))+geom_boxplot()+geom_point(size=5, colour="orange", size=5)+ theme_bw()
+```
+There appears to be more magnesium in South hammond forest, but not a significant degree more. 
+May want to check to see if that is an outlier or not. When you look at the data it does not appear to be, as there is 92 and an 84ppm. 
+
+### Running a test to see
+
+explanatory data is categorical, response is ratio, so we are looking at a two sample t-test. 
+
+```{r}
+t.test(Mg_ppm~Forest, data=magneto)
+```
+The p value is 0.2222 which means we must accept the Null hypothesis.The amount of magnesium does not differ significantly between Peavine and South Hammond.
+
+The assumptions of a student t-test is a special case:
+Assumptions:
+The book we are using is not a stats book. Because the t test uses a different way to do the math it is not designed to be used with the autoplot. T-test is a special case of anaylsis of variance. We could do it with a linear model (lm()) and then use autoplot to check it.
+
+```{r}
+ggplot(magneto, aes(Forest, y=Mg_ppm))+geom_point(position="jitter", size=2, alpha=0.5)+geom_boxplot() + theme_bw()
+# jitter moves the dots around so they are not stacked on eachother.
+```
+
+## Question 4
+Does the abundance of zinc (Zn_ppm) differ among forests?
+
+### Graph first
+
+We have multiple explanatory variables, as we have several forests. And zinc is ratio data. So, we can maybe fit them all for a bot plot lets see. Is there a different one to use?
+```{r}
+ggplot(soil, aes(x=Forest, y=Zn_ppm)) +geom_boxplot()+geom_point(size=5, colour="maroon")+ theme_bw()
+```
+They have maroooooon!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+YOU CRACK ME UP! :)
+
+
+Seems to be a big outlier with degrasse and zinc, yikes. 
+
+The means of the boxplot appear to be pretty similar. I do not think there will be a statistical difference. 
+
+### Make an lm
+```{r}
+alltwees<-lm(Zn_ppm~Forest, data=soil)
+```
+
+## Autoplot
+```{r}
+autoplot(alltwees)
+```
+The Q-Q is one of the worrst I have seen. Is it still good? Could you show us some bad looking autplot resutls and tell us what we would do if we encountered them?
+
+UNFORTUNATELY WE WON'T HAVE TIME. BUT IT IS A GOOD IDEA.
+
+The scale location is not a dip or a v so we are good. The fitted residuals are not completly even, but pretty close. 
+
+Overall we are good most likely. 
+
+```{r}
+anova(alltwees)
+```
+The p value is much greater than 0.05 and so we accept the Null hypothesis. 
+
+
+
+
+
+
+
